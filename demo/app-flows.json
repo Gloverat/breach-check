@@ -1,0 +1,21 @@
+{
+  "_note": "The queries Pawprint's frontend actually makes, extracted from its code. A fix is only correct if every one of these still returns what the app expects.",
+  "flows": [
+    { "name": "Visitor browses services", "as": "anon", "sql": "select * from services", "expect": { "rows": 2 } },
+    { "name": "Alice loads her profile", "as": "alice", "sql": "select * from profiles where id = auth.uid()", "expect": { "rows": 1 } },
+    { "name": "Alice sees her sitter's name on her booking", "as": "alice", "sql": "select p.full_name from bookings b join profiles p on p.id = b.sitter_id where b.owner_id = auth.uid()", "expect": { "rows": 1 } },
+    { "name": "Alice lists her bookings", "as": "alice", "sql": "select * from bookings where owner_id = auth.uid()", "expect": { "rows": 1 } },
+    { "name": "Alice creates a booking", "as": "alice", "sql": "insert into bookings (owner_id, sitter_id, pet_name, start_date, price_cents) values (auth.uid(), 'bbbbbbbb-0000-0000-0000-000000000002', 'Biscuit', '2026-12-01', 9000)", "expect": { "ok": true } },
+    { "name": "Alice reads messages on her booking", "as": "alice", "sql": "select * from messages where booking_id = 1", "expect": { "rows": 1 } },
+    { "name": "Bob (sitter) sees both jobs assigned to him", "as": "bob", "sql": "select * from bookings where sitter_id = auth.uid()", "expect": { "rows": 2 } },
+    { "name": "Bob replies on Alice's booking", "as": "bob", "sql": "insert into messages (booking_id, sender_id, body) values (1, auth.uid(), 'Got it, see you Saturday.')", "expect": { "ok": true } }
+  ],
+  "isolation": [
+    { "name": "Alice cannot read Carol's booking or door code", "as": "alice", "sql": "select * from bookings where owner_id = 'cccccccc-0000-0000-0000-000000000003'", "expect": { "rows": 0 } },
+    { "name": "Alice cannot read Carol's messages", "as": "alice", "sql": "select * from messages where booking_id = 2", "expect": { "rows": 0 } },
+    { "name": "Alice cannot read Carol's phone or address", "as": "alice", "sql": "select phone, home_address from profiles where id = 'cccccccc-0000-0000-0000-000000000003'", "expect": { "rows": 0 } },
+    { "name": "Alice cannot rewrite Carol's booking price", "as": "alice", "sql": "update bookings set price_cents = 1 where owner_id = 'cccccccc-0000-0000-0000-000000000003' returning id", "expect": { "rows": 0 } },
+    { "name": "Alice cannot make herself a sitter", "as": "alice", "sql": "update profiles set is_sitter = true where id = auth.uid() returning id", "expect": { "rows": 0 } },
+    { "name": "Alice cannot post as Bob", "as": "alice", "sql": "insert into messages (booking_id, sender_id, body) values (1, 'bbbbbbbb-0000-0000-0000-000000000002', 'Fake reply from Bob')", "expect": { "ok": false } }
+  ]
+}
