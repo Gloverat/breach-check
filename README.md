@@ -9,7 +9,7 @@ Built for apps made with Lovable, Bolt, v0, Cursor or by hand. **Only run it on 
 Needs Node 18 or newer. No install, no dependencies.
 
 ```bash
-git clone https://github.com/willfglover1-source/breach-check
+git clone https://github.com/Gloverat/breach-check
 cd breach-check
 node scan.mjs https://YOURPROJECT.supabase.co YOUR_ANON_KEY --repo ../your-app
 ```
